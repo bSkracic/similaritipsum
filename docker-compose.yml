@@ -1,0 +1,48 @@
+version: "3.7"
+
+volumes:
+    dbvolume:
+      name: similaritipsum-db-volume
+    apivolume:
+      name: similaritipsum-service-volume
+
+networks:
+  internalnetwork:
+    name: internal-network
+    external: false
+
+services:
+  db:
+    container_name: "similaritipsum_db"
+    image: postgres:12.0
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - dbvolume:/var/lib/postgresql/data
+      - ./db/scripts:/docker-entrypoint-initdb.d/
+    networks:
+      - internalnetwork
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+
+  api:
+    depends_on:
+      - db
+    container_name: "similaritipsum_service"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - apivolume:/similaritipsum
+    ports:
+      - 8000:8000
+    networks:
+      - internalnetwork
+    env_file:
+      - .env
+    entrypoint: ["./server"]
