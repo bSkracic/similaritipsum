@@ -1,0 +1,14 @@
+basePath: /v2
+info:
+  contact:
+    email: borna.skracic7@gmail.com
+    name: Borna Skracic
+    url: https://github.com/bSkracic
+  description: This is REST API interface for Similaritipsum microservice reporter.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Similaritipsum Reporter REST API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

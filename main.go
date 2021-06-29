@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,10 +13,32 @@ import (
 	"github.com/labstack/echo"
 )
 
+// @title Similaritipsum Reporter REST API
+// @version 1.0
+// @description This is REST API interface for Similaritipsum microservice reporter.
+
+// @contact.name Borna Skracic
+// @contact.url https://github.com/bSkracic
+// @contact.email borna.skracic7@gmail.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host
+// @BasePath /v2
 func main() {
 
 	e := echo.New()
 
+	// Get ratio of skate references to bacon references
+	// @Summary Get ratio
+	// @Description
+	// @ID get-ratio
+	// @Produce  json
+	// @Param save false
+	// @Success 200 {object} model.WordEntry
+	// @Failure default {object} httputil.DefaultError
+	// @Router /ratio [get]
 	e.GET("api/ratio", func(c echo.Context) error {
 
 		b := &service.BaconService{}
@@ -70,6 +91,15 @@ func main() {
 		}{Ratio: baconCount / skateCount, Data: data})
 	})
 
+	// Get skewer formatted words
+	// @Summary Get skewer
+	// @Description
+	// @ID get-ratio
+	// @Produce  json
+	// @Param save true
+	// @Success 200 string
+	// @Failure default {object} httputil.DefaultError
+	// @Router /skewer [get]
 	e.GET("api/skewer", func(c echo.Context) error {
 
 		save, err := strconv.ParseBool(c.QueryParam("save"))
@@ -93,7 +123,6 @@ func main() {
 			go func(s service.Service) {
 				defer wg.Done()
 				res, _ := s.ReadStream()
-				fmt.Printf("Consumed %v\n", s.GetName())
 				for _, word := range res {
 					words <- word
 				}
@@ -107,16 +136,15 @@ func main() {
 				word = strings.ToLower(strings.TrimFunc(word, func(r rune) bool {
 					return !unicode.IsLetter(r)
 				}))
+				skewer := makeSkewer(word)
+				skewers = append(skewers, skewer)
 
 				// If user requested, save entry
-
-				skewer := makeSkewer(word)
-
 				if save {
-					modules.CreateWordEntry(&model.WordEntry{Word: word, Skewer: skewer})
+					go func() {
+						modules.CreateWordEntry(&model.WordEntry{Word: word, Skewer: skewer})
+					}()
 				}
-
-				skewers = append(skewers, skewer)
 			}
 
 		}()
@@ -128,11 +156,35 @@ func main() {
 		}{skewers})
 	})
 
+	// Get skewer formatted words
+	// @Summary Get skewer
+	// @Description
+	// @ID get-ratio
+	// @Produce  json
+	// @Param save true
+	// @Success 200 {object} model.WordEntry
+	// @Failure default {object} httputil.DefaultError
+	// @Router /skewer/history [get]
 	e.GET("api/skewer/history", func(c echo.Context) error {
-		entries := modules.GetWordEntries()
+
+		page, _ := strconv.Atoi(c.QueryParam("page"))
+		if page == 0 {
+			page = 1
+		}
+
+		pageSize, _ := strconv.Atoi(c.QueryParam("page_size"))
+		switch {
+		case pageSize > 100:
+			pageSize = 100
+		case pageSize <= 0:
+			pageSize = 10
+		}
+
+		entries := modules.GetWordEntries(page, pageSize)
 		return c.JSON(http.StatusOK, entries)
 	})
 
+	// e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(":8000"))
 }
 

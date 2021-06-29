@@ -1,0 +1,19 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is REST API interface for Similaritipsum microservice reporter.",
+        "title": "Similaritipsum Reporter REST API",
+        "contact": {
+            "name": "Borna Skracic",
+            "url": "https://github.com/bSkracic",
+            "email": "borna.skracic7@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/v2",
+    "paths": {}
+}
